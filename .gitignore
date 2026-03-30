@@ -1,5 +1,10 @@
 node_modules
 .DS_Store
+.env*
+
+# Next.js
+.next
+out
 
 # project tracking (internal)
 .tracking

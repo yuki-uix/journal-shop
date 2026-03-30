@@ -1,5 +1,5 @@
-// ⚠️ 此文件仅可在服务端（Server Actions / Route Handlers / scripts）使用
-// 禁止在 Client Component 中导入，否则 SHOPIFY_ADMIN_ACCESS_TOKEN 会泄露到客户端 bundle
+// ⚠️ SERVER-ONLY — 禁止在 Client Component 中导入
+// SHOPIFY_ADMIN_ACCESS_TOKEN 无 NEXT_PUBLIC_ 前缀，不会被打包到客户端 bundle
 
 const domain = process.env.SHOPIFY_STORE_DOMAIN
 const token = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN
