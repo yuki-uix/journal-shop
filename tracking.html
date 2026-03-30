@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Journal Shop — Role Tracking</title>
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --surface2: #f0f0f5;
+      --border: #e0e0e8;
+      --text: #1a1a2e;
+      --muted: #8888a0;
+      --accent: #5b4ff0;
+      --accent-light: #5b4ff0;
+
+      --pm: #d946a8;
+      --pm-bg: rgba(217,70,168,0.08);
+      --ba: #0284c7;
+      --ba-bg: rgba(2,132,199,0.08);
+      --ux: #ea580c;
+      --ux-bg: rgba(234,88,12,0.08);
+      --tl: #16a34a;
+      --tl-bg: rgba(22,163,74,0.08);
+      --qa: #b45309;
+      --qa-bg: rgba(180,83,9,0.08);
+
+      --w1: #5b4ff0;
+      --w2: #0284c7;
+      --w3: #16a34a;
+      --w4: #ea580c;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    /* ─── Header ─── */
+    .header {
+      max-width: 1200px;
+      margin: 0 auto 28px;
+    }
+
+    .header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .header h1 span { color: var(--accent-light); }
+
+    .header p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    /* ─── Progress Overview ─── */
+    .overview {
+      max-width: 1200px;
+      margin: 0 auto 24px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    .role-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .role-card:hover { border-color: var(--accent); }
+    .role-card.active { border-color: var(--accent); background: var(--surface2); }
+
+    .role-card .role-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .role-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .progress-bar-wrap {
+      background: var(--border);
+      border-radius: 4px;
+      height: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* ─── Filter Bar ─── */
+    .filter-bar {
+      max-width: 1200px;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .filter-btn:hover { color: var(--text); border-color: var(--accent); }
+    .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    .week-filter-btn {
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .week-filter-btn:hover { color: var(--text); }
+    .week-filter-btn.active-w1 { background: var(--w1); border-color: var(--w1); color: #fff; }
+    .week-filter-btn.active-w2 { background: var(--w2); border-color: var(--w2); color: #000; }
+    .week-filter-btn.active-w3 { background: var(--w3); border-color: var(--w3); color: #000; }
+    .week-filter-btn.active-w4 { background: var(--w4); border-color: var(--w4); color: #fff; }
+
+    .divider { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+
+    /* ─── Main Grid ─── */
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* ─── Week Section ─── */
+    .week-section {
+      margin-bottom: 28px;
+    }
+
+    .week-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .week-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .week-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .week-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      margin-left: auto;
+    }
+
+    .tasks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 10px;
+    }
+
+    /* ─── Task Card ─── */
+    .task-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      border-left: 3px solid transparent;
+      transition: opacity 0.2s, border-color 0.15s;
+    }
+
+    .task-card:hover { border-color: var(--border); }
+
+    .task-card.hidden { display: none; }
+
+    .task-card.done { opacity: 0.5; }
+    .task-card.done .task-title { text-decoration: line-through; }
+
+    .task-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .task-checkbox {
+      width: 16px; height: 16px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      cursor: pointer;
+      accent-color: var(--accent);
+    }
+
+    .task-meta {
+      flex: 1;
+    }
+
+    .task-title {
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.4;
+      color: var(--text);
+    }
+
+    .task-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 8px;
+    }
+
+    .tag {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 500;
+    }
+
+    .tag-role {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .tag-type {
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .task-notes {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 8px;
+      line-height: 1.5;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ─── Empty State ─── */
+    .empty {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* ─── Footer Stats ─── */
+    .footer-stats {
+      max-width: 1200px;
+      margin: 24px auto 0;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .stat span { color: var(--text); font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Journal Shop — <span>Role Tracking</span></h1>
+  <p>按角色拆分的 MVP 任务看板 · Stack: Next.js + Tailwind + Shopify API + Vercel</p>
+</div>
+
+<!-- Role Overview Cards -->
+<div class="overview" id="overview"></div>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+  <button class="filter-btn active" onclick="filterRole('all')">全部角色</button>
+  <button class="filter-btn" onclick="filterRole('PM')" style="--rc:var(--pm)">🎯 PM</button>
+  <button class="filter-btn" onclick="filterRole('BA')" style="--rc:var(--ba)">📋 BA</button>
+  <button class="filter-btn" onclick="filterRole('UX')" style="--rc:var(--ux)">🎨 UX</button>
+  <button class="filter-btn" onclick="filterRole('TL')" style="--rc:var(--tl)">🏗️ TL</button>
+  <button class="filter-btn" onclick="filterRole('QA')" style="--rc:var(--qa)">🔍 QA</button>
+  <div class="divider"></div>
+  <button class="week-filter-btn" onclick="filterWeek('all')">全部周次</button>
+  <button class="week-filter-btn" onclick="filterWeek('w1')">Week 1</button>
+  <button class="week-filter-btn" onclick="filterWeek('w2')">Week 2</button>
+  <button class="week-filter-btn" onclick="filterWeek('w3')">Week 3</button>
+  <button class="week-filter-btn" onclick="filterWeek('w4')">Week 4</button>
+</div>
+
+<!-- Main Content -->
+<div class="main" id="main"></div>
+
+<!-- Footer -->
+<div class="footer-stats" id="footer-stats"></div>
+
+<script>
+const ROLES = {
+  PM: { color: 'var(--pm)', bg: 'var(--pm-bg)', icon: '🎯', label: 'PM 产品经理' },
+  BA: { color: 'var(--ba)', bg: 'var(--ba-bg)', icon: '📋', label: 'BA 业务分析' },
+  UX: { color: 'var(--ux)', bg: 'var(--ux-bg)', icon: '🎨', label: 'UX 体验设计' },
+  TL: { color: 'var(--tl)', bg: 'var(--tl-bg)', icon: '🏗️', label: 'TL 技术负责' },
+  QA: { color: 'var(--qa)', bg: 'var(--qa-bg)', icon: '🔍', label: 'QA 质量工程' },
+};
+
+const WEEKS = [
+  {
+    id: 'w1',
+    label: 'Week 1',
+    color: 'var(--w1)',
+    colorHex: '#7c6af7',
+    title: '商品域',
+    subtitle: 'create-product 脚本 → 前台商品列表 / 详情页',
+  },
+  {
+    id: 'w2',
+    label: 'Week 2',
+    color: 'var(--w2)',
+    colorHex: '#38bdf8',
+    title: '购物链路',
+    subtitle: 'Cart API → CartDrawer → checkoutUrl 跳转',
+  },
+  {
+    id: 'w3',
+    label: 'Week 3',
+    color: 'var(--w3)',
+    colorHex: '#4ade80',
+    title: '订单域',
+    subtitle: 'Admin orders query → 订单列表页',
+  },
+  {
+    id: 'w4',
+    label: 'Week 4',
+    color: 'var(--w4)',
+    colorHex: '#fb923c',
+    title: '事件驱动',
+    subtitle: 'Webhook 注册 → 本地接收 → HMAC 验证',
+  },
+];
+
+const TASKS = [
+  // ───── WEEK 1：商品域 ─────
+
+  // PM
+  {
+    id: 'pm-w1-1', week: 'w1', role: 'PM', priority: 'must',
+    title: '确认 Week 1 的 MVP 边界：商品域只做展示，不含筛选和套装',
+    notes: '风格筛选 / Collection 是 Should Have，Week 1 砍掉，只保证商品列表 + 详情页跑通。',
+  },
+  {
+    id: 'pm-w1-2', week: 'w1', role: 'PM', priority: 'must',
+    title: '在 Shopify Dev Store 手动建 3-5 个商品（含图片、Variant、标签）',
+    notes: '为前台展示提供真实测试数据，需覆盖：有库存、无库存、多 Variant 三种状态。',
+  },
+  {
+    id: 'pm-w1-3', week: 'w1', role: 'PM', priority: 'must',
+    title: '跑通训练脚本 01-create-product.ts，理解 Product + Variant + Option 数据模型',
+    notes: 'PM 角度：产品字段（tags、status、vendor）与业务含义的映射关系需要明确。',
+  },
+
+  // BA
+  {
+    id: 'ba-w1-1', week: 'w1', role: 'BA', priority: 'must',
+    title: '梳理商品数据模型：Product / Variant / Option 三层关系',
+    notes: '明确 handle 是路由标识、tags 是业务语义标签、variants 包含价格与库存。',
+  },
+  {
+    id: 'ba-w1-2', week: 'w1', role: 'BA', priority: 'must',
+    title: '定义商品列表页与详情页的数据需求（GraphQL 字段选取）',
+    notes: '列表页：id, handle, title, priceRange, images(first:1), tags。详情页追加 variants, description。',
+  },
+  {
+    id: 'ba-w1-3', week: 'w1', role: 'BA', priority: 'must',
+    title: '识别边界条件：商品无图、多图切换、单 Variant 时选择器隐藏',
+    notes: '无图时显示占位图；单 Variant 直接跳过选择器渲染；详情页 handle 不存在时 404。',
+  },
+  {
+    id: 'ba-w1-4', week: 'w1', role: 'BA', priority: 'must',
+    title: '定义 ISR 缓存策略：商品数据 revalidate: 60s 的业务依据',
+    notes: '库存变更不需要秒级同步；60s 缓存平衡实时性与性能。Webhook 可在 Week 4 补充强制重验证。',
+  },
+
+  // UX
+  {
+    id: 'ux-w1-1', week: 'w1', role: 'UX', priority: 'must',
+    title: '设计首页信息架构：Hero → 风格入口 → 精选套装 → 单品分区',
+    notes: '参考建筑学"分区感"：大区块清晰划分，留白足够，视觉节奏从宏观到具体。',
+  },
+  {
+    id: 'ux-w1-2', week: 'w1', role: 'UX', priority: 'must',
+    title: '定义 ProductCard 组件视觉规范：图片比例、价格位置、售罄蒙层',
+    notes: '图片统一 4:3 或 1:1（待定），售罄用灰色蒙层 + "售罄"文字，不用 disabled button。',
+  },
+  {
+    id: 'ux-w1-3', week: 'w1', role: 'UX', priority: 'must',
+    title: '规划商品详情页布局：主图区（左/上）+ 信息区（右/下），移动端堆叠',
+    notes: '桌面端左右两栏；移动端图片在上，信息在下，"加入购物车"吸底固定。',
+  },
+  {
+    id: 'ux-w1-4', week: 'w1', role: 'UX', priority: 'must',
+    title: '设计 Variant 选择器交互：选中态 / 未选中 / 售罄不可选',
+    notes: '售罄的 Variant 用斜线样式 + 禁用，选中后价格区域有过渡动画。',
+  },
+
+  // TL
+  {
+    id: 'tl-w1-1', week: 'w1', role: 'TL', priority: 'must',
+    title: '初始化 Next.js 项目（App Router），配置 Tailwind CSS + 环境变量',
+    notes: '用 create-next-app --typescript；.env.local 配置 4 个 Shopify 环境变量；.gitignore 加上 .env.local。',
+  },
+  {
+    id: 'tl-w1-2', week: 'w1', role: 'TL', priority: 'must',
+    title: '实现 lib/shopify/storefront.ts：storefrontFetch 封装 + 错误处理',
+    notes: '泛型 <T>，ISR revalidate: 60，errors 数组非空时 throw Error。',
+  },
+  {
+    id: 'tl-w1-3', week: 'w1', role: 'TL', priority: 'must',
+    title: '实现 lib/types/shopify.ts：Product / Variant / Cart / CartLine 类型',
+    notes: '先定义完整类型；后续查询按需裁剪字段，类型用 Pick<Product, ...> 派生。',
+  },
+  {
+    id: 'tl-w1-4', week: 'w1', role: 'TL', priority: 'must',
+    title: '实现商品列表页 /products：getProducts query + ProductCard 组件',
+    notes: 'Server Component 获取数据，ProductCard 纯展示；分页 cursor 暂不做（MVP 阶段 first: 50 兜底）。',
+  },
+  {
+    id: 'tl-w1-5', week: 'w1', role: 'TL', priority: 'must',
+    title: '实现商品详情页 /products/[handle]：getProductByHandle + VariantSelector',
+    notes: 'VariantSelector 是 Client Component（useState）；handle 不存在时 notFound()。',
+  },
+  {
+    id: 'tl-w1-6', week: 'w1', role: 'TL', priority: 'must',
+    title: '跑通训练脚本 01-create-product.ts（ts-node 直接运行）',
+    notes: '用 Admin API 创建带 Variant 的商品，感受 productCreate mutation 的参数结构。',
+  },
+
+  // QA
+  {
+    id: 'qa-w1-1', week: 'w1', role: 'QA', priority: 'must',
+    title: '定义商品域验收标准：列表页、详情页、脚本各一份 DoD',
+    notes: '列表页：所有商品展示且价格正确；详情页：Variant 切换价格同步；脚本：成功创建且 Shopify 后台可见。',
+  },
+  {
+    id: 'qa-w1-2', week: 'w1', role: 'QA', priority: 'must',
+    title: '验证边界场景：无图商品、售罄商品、单 Variant 商品页面渲染正常',
+    notes: '三种特殊商品都要在 Dev Store 创建并实际访问详情页验证。',
+  },
+  {
+    id: 'qa-w1-3', week: 'w1', role: 'QA', priority: 'must',
+    title: '确认 GraphQL 字段无过度 fetch（按需取字段）',
+    notes: '用 Network Tab 检查 Storefront API 请求体，确认无多余字段。',
+  },
+
+  // ───── WEEK 2：购物链路 ─────
+
+  // PM
+  {
+    id: 'pm-w2-1', week: 'w2', role: 'PM', priority: 'must',
+    title: '确认结账链路边界：MVP 阶段只跳转 Shopify 托管结账页，不自建',
+    notes: '自建结账 = Won\'t Have。checkoutUrl 跳转是唯一出口，避免踩 Shopify 支付合规坑。',
+  },
+  {
+    id: 'pm-w2-2', week: 'w2', role: 'PM', priority: 'must',
+    title: '确认购物车持久化策略：localStorage 存 cartId，无需登录态',
+    notes: 'cartId 有效期由 Shopify 管理（约 10 天），足够 MVP 训练使用。',
+  },
+  {
+    id: 'pm-w2-3', week: 'w2', role: 'PM', priority: 'should',
+    title: '跑通训练脚本 03-create-cart.ts，理解 Cart token 机制与生命周期',
+    notes: '理解 cartId 不等于 checkoutId；Cart API 是无状态的，通过 cartId 关联。',
+  },
+
+  // BA
+  {
+    id: 'ba-w2-1', week: 'w2', role: 'BA', priority: 'must',
+    title: '梳理购物车完整操作流：create → addLines → updateLines → removeLines',
+    notes: '每步的输入输出、返回的 Cart 结构、错误场景（商品下架、库存不足）都需要定义。',
+  },
+  {
+    id: 'ba-w2-2', week: 'w2', role: 'BA', priority: 'must',
+    title: '定义 CartDrawer 的状态逻辑：open/close、loading 态、空购物车态',
+    notes: 'CartContext（React Context）管理 cartId + cartData；加购时 optimistic update 或 loading spinner？',
+  },
+  {
+    id: 'ba-w2-3', week: 'w2', role: 'BA', priority: 'must',
+    title: '识别购物车异常场景：cartId 失效、同一商品重复加购、售罄商品加购拦截',
+    notes: 'cartId 失效时 cartCreate 重建；重复加购由 cartLinesAdd 自动合并数量；售罄拦截在前端 availableForSale 判断。',
+  },
+
+  // UX
+  {
+    id: 'ux-w2-1', week: 'w2', role: 'UX', priority: 'must',
+    title: '设计 CartDrawer 交互：从右侧滑入、半透明遮罩、点击外部关闭',
+    notes: '抽屉宽度 380px（桌面端），全宽（移动端）。过渡动画 200ms ease-out。',
+  },
+  {
+    id: 'ux-w2-2', week: 'w2', role: 'UX', priority: 'must',
+    title: '设计购物车行（CartItem）：商品图 + 名称 + 数量控制 + 删除 + 小计',
+    notes: '数量控制用 − / + 按钮，不用 input（避免移动端键盘弹出）；删除用图标按钮，hover 变红。',
+  },
+  {
+    id: 'ux-w2-3', week: 'w2', role: 'UX', priority: 'must',
+    title: '设计 Header 中的购物车入口：图标 + 数量 Badge，实时更新',
+    notes: 'Badge 显示 totalQuantity，超过 99 显示 99+。加购时 Badge 有短暂弹跳动画。',
+  },
+
+  // TL
+  {
+    id: 'tl-w2-1', week: 'w2', role: 'TL', priority: 'must',
+    title: '实现 lib/shopify/queries/cart.ts：4 个 Cart mutation',
+    notes: 'cartCreate / cartLinesAdd / cartLinesUpdate / cartLinesRemove，每个都返回 CartFragment。',
+  },
+  {
+    id: 'tl-w2-2', week: 'w2', role: 'TL', priority: 'must',
+    title: '实现 CartContext：管理 cartId（localStorage）+ cartData（state）+ 操作函数',
+    notes: 'Context 提供 cart, addToCart, updateLine, removeLine, openCart。加购函数处理 cartCreate 与 cartLinesAdd 两路分支。',
+  },
+  {
+    id: 'tl-w2-3', week: 'w2', role: 'TL', priority: 'must',
+    title: '实现 CartDrawer 组件（Client Component）：动画 + CartItem 列表 + 结账按钮',
+    notes: '用 CSS transform translateX 实现滑入；CartItem 数量变更 debounce 300ms 再调 API，避免频繁请求。',
+  },
+  {
+    id: 'tl-w2-4', week: 'w2', role: 'TL', priority: 'must',
+    title: '在商品详情页接入"加入购物车"按钮，连接 CartContext.addToCart',
+    notes: '按钮在 availableForSale=false 时 disabled + 显示"售罄"；加购成功后自动打开 CartDrawer。',
+  },
+
+  // QA
+  {
+    id: 'qa-w2-1', week: 'w2', role: 'QA', priority: 'must',
+    title: '验收购物链路端到端：商品详情 → 加购 → CartDrawer → 跳转结账页',
+    notes: '结账页要真实打开 Shopify 托管页面，URL 包含 checkoutUrl；整条链路在移动端也要验证。',
+  },
+  {
+    id: 'qa-w2-2', week: 'w2', role: 'QA', priority: 'must',
+    title: '验证 cartId 刷新持久化：加购后刷新页面，购物车数据不丢失',
+    notes: 'localStorage 中 cartId 存在，刷新后 Context 重新 fetch cart 数据，Badge 数量正确。',
+  },
+  {
+    id: 'qa-w2-3', week: 'w2', role: 'QA', priority: 'must',
+    title: '验证售罄拦截：库存为 0 的商品，加购按钮禁用，不能发出 cartLinesAdd 请求',
+    notes: '用 Network Tab 确认没有发出 API 请求，同时页面显示"售罄"文案。',
+  },
+
+  // ───── WEEK 3：订单域 ─────
+
+  // PM
+  {
+    id: 'pm-w3-1', week: 'w3', role: 'PM', priority: 'must',
+    title: '确认 Admin 后台定位：训练用，不加鉴权，生产化时再补 NextAuth',
+    notes: '技术债已记录。MVP 阶段 /admin 路由直接访问，不需要登录态。',
+  },
+  {
+    id: 'pm-w3-2', week: 'w3', role: 'PM', priority: 'must',
+    title: '确认订单管理 MVP 范围：查看列表 + 展开详情 + 手动标记发货',
+    notes: '退款 / 取消订单 = Should Have 之后。MVP 只需读取订单 + 一个 fulfillmentCreate 写操作。',
+  },
+
+  // BA
+  {
+    id: 'ba-w3-1', week: 'w3', role: 'BA', priority: 'must',
+    title: '梳理订单状态流转：PENDING → PAID → FULFILLED / PARTIAL / VOIDED',
+    notes: '理解 financialStatus 与 fulfillmentStatus 是两个独立维度，组合成订单的实际状态。',
+  },
+  {
+    id: 'ba-w3-2', week: 'w3', role: 'BA', priority: 'must',
+    title: '定义订单列表所需字段：id, name, customer, totalPrice, financialStatus, fulfillmentStatus',
+    notes: 'name 是订单号（#1001 格式）；createdAt 格式化为 yyyy/MM/dd HH:mm 显示。',
+  },
+  {
+    id: 'ba-w3-3', week: 'w3', role: 'BA', priority: 'must',
+    title: '定义商品管理所需操作：列表查看 + 新建 + 编辑 + 上架/下架切换',
+    notes: 'status: ACTIVE | DRAFT 控制上下架；productCreate 和 productUpdate mutation 参数清单。',
+  },
+
+  // UX
+  {
+    id: 'ux-w3-1', week: 'w3', role: 'UX', priority: 'must',
+    title: '设计 Admin Dashboard 整体布局：侧边导航 + 主内容区',
+    notes: '侧边栏：Dashboard / Products / Orders 三个入口。整体用深色或浅色（待定，与前台区分）。',
+  },
+  {
+    id: 'ux-w3-2', week: 'w3', role: 'UX', priority: 'must',
+    title: '设计订单列表 UI：表格行 + 状态 Badge + 展开详情',
+    notes: 'financialStatus 和 fulfillmentStatus 用不同颜色 Badge 区分；点击行展开商品明细（无跳转）。',
+  },
+  {
+    id: 'ux-w3-3', week: 'w3', role: 'UX', priority: 'must',
+    title: '设计商品管理 UI：列表表格 + 新建表单（Modal 或独立页）+ 上下架开关',
+    notes: '新建表单字段：标题、描述、价格、SKU、标签、状态。Modal 还是独立路由由 TL 决定复杂度。',
+  },
+
+  // TL
+  {
+    id: 'tl-w3-1', week: 'w3', role: 'TL', priority: 'must',
+    title: '实现 lib/shopify/admin.ts：adminFetch 封装，强制 cache: no-store',
+    notes: 'Admin Token 只在 Server Component 和 API Route 中使用，永远不传到客户端。',
+  },
+  {
+    id: 'tl-w3-2', week: 'w3', role: 'TL', priority: 'must',
+    title: '实现 /admin/orders 页面：订单列表 + 详情展开（Server Component）',
+    notes: 'orders query 带 query: "status:open" 过滤；展开详情用 <details> 或 Client Component accordion。',
+  },
+  {
+    id: 'tl-w3-3', week: 'w3', role: 'TL', priority: 'must',
+    title: '实现 /admin/products 页面：商品列表 + 新建商品表单（productCreate mutation）',
+    notes: '新建表单用 Server Action 或 API Route 提交；提交成功后 revalidatePath + 返回列表。',
+  },
+  {
+    id: 'tl-w3-4', week: 'w3', role: 'TL', priority: 'must',
+    title: '实现库存手动调整：inventoryAdjustQuantity mutation，需要先查 locationId',
+    notes: '先 query locations(first:1) 获取 locationId，再关联 inventoryItemId 调整。这是 Shopify 库存 API 最复杂的部分。',
+  },
+
+  // QA
+  {
+    id: 'qa-w3-1', week: 'w3', role: 'QA', priority: 'must',
+    title: '验收后台链路：Admin 创建商品 → 前台商品列表看到 → 详情页可访问',
+    notes: '端到端验证双向打通：后台写 → 前台读。ISR 缓存意味着最多 60s 延迟。',
+  },
+  {
+    id: 'qa-w3-2', week: 'w3', role: 'QA', priority: 'must',
+    title: '确认 Admin Token 安全：Network Tab 中客户端请求不含 X-Shopify-Access-Token',
+    notes: '最重要的安全验收项。在浏览器 DevTools 中检查所有 XHR/Fetch，确认无 Token 泄露。',
+  },
+  {
+    id: 'qa-w3-3', week: 'w3', role: 'QA', priority: 'must',
+    title: '验证库存调整同步：Admin 调库存到 0 → 前台该商品显示售罄（60s 内）',
+    notes: '等待 ISR 重新验证后测试；或手动触发 on-demand revalidation。',
+  },
+
+  // ───── WEEK 4：事件驱动 ─────
+
+  // PM
+  {
+    id: 'pm-w4-1', week: 'w4', role: 'PM', priority: 'should',
+    title: '确认 Webhook 训练目标：理解事件驱动模式，不做生产级持久化',
+    notes: '技术债已记录：Webhook 无持久化，事件丢失无法回溯。Week 4 只需本地接收并打印事件即可。',
+  },
+  {
+    id: 'pm-w4-2', week: 'w4', role: 'PM', priority: 'should',
+    title: '跑通训练脚本 04-webhook-test.ts',
+    notes: '注册 Webhook → ngrok 暴露本地端口 → 触发事件 → 验证接收。',
+  },
+
+  // BA
+  {
+    id: 'ba-w4-1', week: 'w4', role: 'BA', priority: 'should',
+    title: '梳理 4 个核心 Webhook 事件与触发业务场景的对应关系',
+    notes: 'orders/create → 发货提醒；orders/paid → 库存确认；products/update → 缓存重验证；inventory_levels/update → 售罄同步。',
+  },
+  {
+    id: 'ba-w4-2', week: 'w4', role: 'BA', priority: 'should',
+    title: '定义 HMAC 验证流程：X-Shopify-Hmac-Sha256 header 校验逻辑',
+    notes: 'rawBody + secret → HMAC-SHA256 → base64 → 比对 header 值。rawBody 必须在 JSON.parse 前读取。',
+  },
+
+  // UX
+  {
+    id: 'ux-w4-1', week: 'w4', role: 'UX', priority: 'should',
+    title: '（可选）Admin Dashboard 首页：显示近期订单数、待处理订单、库存预警',
+    notes: '如果 Week 4 有余力，做一个简单的 Dashboard 首页 KPI 卡片，增强后台体验。',
+  },
+
+  // TL
+  {
+    id: 'tl-w4-1', week: 'w4', role: 'TL', priority: 'should',
+    title: '实现 app/api/webhooks/orders/route.ts：接收 orders/create 和 orders/paid',
+    notes: 'POST handler：验证 HMAC → 解析 body → console.log 事件数据。Next.js App Router API Route。',
+  },
+  {
+    id: 'tl-w4-2', week: 'w4', role: 'TL', priority: 'should',
+    title: '实现 app/api/webhooks/products/route.ts：接收 products/update 并触发 revalidatePath',
+    notes: 'products/update 事件 → revalidatePath(\'/products\') → 前台商品缓存强制更新。',
+  },
+  {
+    id: 'tl-w4-3', week: 'w4', role: 'TL', priority: 'should',
+    title: '用 ngrok 暴露本地端口，注册 Webhook 到 Dev Store',
+    notes: 'webhookSubscriptionCreate mutation 传入 callbackUrl（ngrok URL）。记住 ngrok 每次重启 URL 变，需重新注册。',
+  },
+  {
+    id: 'tl-w4-4', week: 'w4', role: 'TL', priority: 'should',
+    title: '跑通训练脚本 02-update-inventory.ts，理解 locationId + inventoryLevel 设计',
+    notes: '感受 Shopify 库存管理的多仓设计（即使只有一个 location）。',
+  },
+
+  // QA
+  {
+    id: 'qa-w4-1', week: 'w4', role: 'QA', priority: 'should',
+    title: '验证 HMAC 签名校验：篡改请求 body 后端正确拒绝（401）',
+    notes: '用 curl 发送伪造请求，验证 HMAC 校验逻辑的正确性。',
+  },
+  {
+    id: 'qa-w4-2', week: 'w4', role: 'QA', priority: 'should',
+    title: '端到端事件流验证：在 Shopify 后台操作 → 本地终端收到 Webhook 事件',
+    notes: '手动创建测试订单 → 观察 ngrok 日志 + 本地 Next.js 终端输出。',
+  },
+  {
+    id: 'qa-w4-3', week: 'w4', role: 'QA', priority: 'should',
+    title: '整理最终技术债清单，确认 MVP 所有 Must Have 验收通过',
+    notes: '对照 mvp.md 中的 Definition of Done 逐条打勾。输出一份最终 QA Report。',
+  },
+];
+
+// ── State ──
+let activeRole = 'all';
+let activeWeek = 'all';
+let checked = JSON.parse(localStorage.getItem('jstracking') || '{}');
+
+function save() {
+  localStorage.setItem('jstracking', JSON.stringify(checked));
+}
+
+function getTasksFor(week, role) {
+  return TASKS.filter(t => t.week === week && (role === 'all' || t.role === role));
+}
+
+function getDoneCount(tasks) {
+  return tasks.filter(t => checked[t.id]).length;
+}
+
+// ── Render Overview ──
+function renderOverview() {
+  const roles = Object.keys(ROLES);
+  const container = document.getElementById('overview');
+  container.innerHTML = roles.map(r => {
+    const total = TASKS.filter(t => t.role === r).length;
+    const done = TASKS.filter(t => t.role === r && checked[t.id]).length;
+    const pct = total ? Math.round(done / total * 100) : 0;
+    const info = ROLES[r];
+    return `
+      <div class="role-card ${activeRole === r ? 'active' : ''}" onclick="filterRole('${r}')">
+        <div class="role-label">
+          <span class="role-dot" style="background:${info.color}"></span>
+          <span>${info.icon} ${r}</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" style="width:${pct}%;background:${info.color}"></div>
+        </div>
+        <div class="progress-text">${done} / ${total} 完成 · ${pct}%</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Render Main ──
+function renderMain() {
+  const main = document.getElementById('main');
+  let html = '';
+
+  const weeksToShow = activeWeek === 'all' ? WEEKS : WEEKS.filter(w => w.id === activeWeek);
+
+  for (const week of weeksToShow) {
+    const tasks = getTasksFor(week.id, activeRole);
+    if (tasks.length === 0) continue;
+    const done = getDoneCount(tasks);
+    const pct = Math.round(done / tasks.length * 100);
+
+    html += `
+      <div class="week-section" data-week="${week.id}">
+        <div class="week-header">
+          <span class="week-badge" style="background:${week.color}22;color:${week.colorHex};border:1px solid ${week.color}44">
+            ${week.label}
+          </span>
+          <span class="week-title">${week.title}</span>
+          <span class="week-subtitle">${done}/${tasks.length} · ${week.subtitle}</span>
+        </div>
+        <div class="tasks-grid">
+          ${tasks.map(t => renderTask(t)).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  if (!html) {
+    html = '<div class="empty">没有匹配的任务</div>';
+  }
+
+  main.innerHTML = html;
+  renderFooter();
+}
+
+function renderTask(t) {
+  const role = ROLES[t.role];
+  const isDone = !!checked[t.id];
+  const priorityLabel = t.priority === 'must' ? 'Must Have' : 'Should Have';
+  const priorityColor = t.priority === 'must' ? '#7c6af7' : '#6b6b80';
+
+  return `
+    <div class="task-card ${isDone ? 'done' : ''}"
+         id="card-${t.id}"
+         style="border-left-color:${role.color}">
+      <div class="task-header">
+        <input type="checkbox" class="task-checkbox"
+               ${isDone ? 'checked' : ''}
+               onchange="toggleTask('${t.id}', this.checked)" />
+        <div class="task-meta">
+          <div class="task-title">${t.title}</div>
+        </div>
+      </div>
+      <div class="task-tags">
+        <span class="tag tag-role" style="background:${role.color}22;color:${role.color};border:1px solid ${role.color}44">
+          ${role.icon} ${t.role}
+        </span>
+        <span class="tag tag-type" style="color:${priorityColor}">${priorityLabel}</span>
+      </div>
+      ${t.notes ? `<div class="task-notes">${t.notes}</div>` : ''}
+    </div>
+  `;
+}
+
+function renderFooter() {
+  const visible = TASKS.filter(t =>
+    (activeRole === 'all' || t.role === activeRole) &&
+    (activeWeek === 'all' || t.week === activeWeek)
+  );
+  const done = getDoneCount(visible);
+  const total = visible.length;
+  const mustDone = getDoneCount(visible.filter(t => t.priority === 'must'));
+  const mustTotal = visible.filter(t => t.priority === 'must').length;
+
+  document.getElementById('footer-stats').innerHTML = `
+    <div class="stat">总进度 <span>${done} / ${total}</span></div>
+    <div class="stat">Must Have <span>${mustDone} / ${mustTotal}</span></div>
+    <div class="stat">Should Have <span>${done - mustDone} / ${total - mustTotal}</span></div>
+    <div style="margin-left:auto;color:var(--muted)">数据已自动保存到本地</div>
+  `;
+}
+
+// ── Interactions ──
+function toggleTask(id, val) {
+  checked[id] = val;
+  save();
+  const card = document.getElementById('card-' + id);
+  if (val) card.classList.add('done');
+  else card.classList.remove('done');
+  renderOverview();
+  renderFooter();
+}
+
+function filterRole(role) {
+  activeRole = role;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  const btns = document.querySelectorAll('.filter-btn');
+  const map = { all: 0, PM: 1, BA: 2, UX: 3, TL: 4, QA: 5 };
+  if (map[role] !== undefined) btns[map[role]].classList.add('active');
+  renderOverview();
+  renderMain();
+}
+
+function filterWeek(week) {
+  activeWeek = week;
+  document.querySelectorAll('.week-filter-btn').forEach(b => {
+    b.className = 'week-filter-btn';
+  });
+  const btns = document.querySelectorAll('.week-filter-btn');
+  const map = { all: 0, w1: 1, w2: 2, w3: 3, w4: 4 };
+  if (map[week] !== undefined) {
+    const cls = week === 'all' ? '' : `active-${week}`;
+    if (cls) btns[map[week]].classList.add(cls);
+  }
+  renderMain();
+}
+
+// ── Init ──
+renderOverview();
+renderMain();
+</script>
+</body>
+</html>
