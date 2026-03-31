@@ -1,8 +1,8 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { storefrontFetch } from '@/lib/shopify/storefront'
 import { GET_PRODUCTS_BY_TAG_QUERY } from '@/lib/shopify/queries/products'
 import type { ProductsResponse, Product } from '@/lib/types/shopify'
+import ProductCard from '@/components/product/ProductCard'
 
 const STYLES = [
   { name: '简约', emoji: '📐', bg: 'bg-stone-100', href: '/products' },
@@ -10,60 +10,6 @@ const STYLES = [
   { name: '文艺', emoji: '🎨', bg: 'bg-violet-50', href: '/products' },
   { name: '可爱', emoji: '🧸', bg: 'bg-pink-50', href: '/products' },
 ]
-
-function formatPrice(amount: string, currencyCode: string) {
-  return new Intl.NumberFormat('zh-CN', {
-    style: 'currency',
-    currency: currencyCode,
-  }).format(parseFloat(amount))
-}
-
-function ProductCard({ product }: { product: Product }) {
-  const image = product.images.edges[0]?.node
-  const price = product.priceRange.minVariantPrice
-
-  return (
-    <Link href={`/products/${product.handle}`} className="group">
-      <div className="aspect-square overflow-hidden rounded-lg bg-zinc-100">
-        {image ? (
-          <Image
-            src={image.url}
-            alt={image.altText ?? product.title}
-            width={400}
-            height={400}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-zinc-300">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="48"
-              height="48"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
-              <circle cx="9" cy="9" r="2" />
-              <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-            </svg>
-          </div>
-        )}
-      </div>
-      <div className="mt-3 space-y-1">
-        <h3 className="line-clamp-2 text-sm font-medium text-zinc-900">
-          {product.title}
-        </h3>
-        <p className="text-sm text-zinc-600">
-          {formatPrice(price.amount, price.currencyCode)}
-        </p>
-      </div>
-    </Link>
-  )
-}
 
 function ProductSection({
   title,
