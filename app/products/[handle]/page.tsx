@@ -14,10 +14,15 @@ import ProductDetail from '@/components/product/ProductDetail'
 export const revalidate = 60
 
 export async function generateStaticParams() {
-  const data = await storefrontFetch<ProductsResponse>(GET_ALL_PRODUCTS_QUERY, {
-    first: 50,
-  })
-  return data.products.edges.map((e) => ({ handle: e.node.handle }))
+  try {
+    const data = await storefrontFetch<ProductsResponse>(GET_ALL_PRODUCTS_QUERY, {
+      first: 50,
+    })
+    return data.products.edges.map((e) => ({ handle: e.node.handle }))
+  } catch {
+    // Env vars missing or API unreachable at build time — fall back to on-demand rendering
+    return []
+  }
 }
 
 async function getProduct(handle: string) {
@@ -34,15 +39,15 @@ export async function generateMetadata({
   params: Promise<{ handle: string }>
 }): Promise<Metadata> {
   const { handle } = await params
-  const product = await getProduct(handle)
-
-  if (!product) {
-    return { title: '商品未找到 — Journal Shop' }
-  }
-
-  return {
-    title: `${product.title} — Journal Shop`,
-    description: product.description || `${product.title} — Journal Shop 手帐文具`,
+  try {
+    const product = await getProduct(handle)
+    if (!product) return { title: '商品未找到 — Journal Shop' }
+    return {
+      title: `${product.title} — Journal Shop`,
+      description: product.description || `${product.title} — Journal Shop 手帐文具`,
+    }
+  } catch {
+    return { title: 'Journal Shop' }
   }
 }
 
