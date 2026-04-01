@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { Variant, MoneyV2 } from '@/lib/types/shopify'
+import { useCart } from '@/context/CartContext'
 
 function formatPrice(money: MoneyV2) {
   return new Intl.NumberFormat('zh-CN', {
@@ -57,6 +58,8 @@ export default function VariantSelector({
   variants: Variant[]
 }) {
   const optionGroups = getOptionGroups(variants)
+  const { addToCart } = useCart()
+  const [isAdding, setIsAdding] = useState(false)
 
   const [selections, setSelections] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {}
@@ -71,6 +74,16 @@ export default function VariantSelector({
 
   function handleSelect(name: string, value: string) {
     setSelections((prev) => ({ ...prev, [name]: value }))
+  }
+
+  async function handleAddToCart() {
+    if (isSoldOut || !selectedVariant || isAdding) return
+    setIsAdding(true)
+    try {
+      await addToCart(selectedVariant.id, 1)
+    } finally {
+      setIsAdding(false)
+    }
   }
 
   return (
@@ -142,19 +155,50 @@ export default function VariantSelector({
         )}
       </div>
 
-      {/* Add to cart button (onClick wired in T2.1) */}
+      {/* Add to cart button */}
       <button
-        disabled={isSoldOut}
+        onClick={handleAddToCart}
+        disabled={isSoldOut || isAdding}
         className={`
-          w-full rounded-lg py-3 text-base font-semibold transition-colors duration-150
+          relative w-full rounded-lg py-3 text-base font-semibold transition-colors duration-150
           ${
             isSoldOut
               ? 'cursor-not-allowed bg-zinc-200 text-zinc-400'
-              : 'bg-zinc-900 text-white hover:bg-zinc-800 active:bg-zinc-700'
+              : isAdding
+                ? 'cursor-not-allowed bg-zinc-700 text-white'
+                : 'bg-zinc-900 text-white hover:bg-zinc-800 active:bg-zinc-700'
           }
         `}
       >
-        {isSoldOut ? '售罄' : '加入购物车'}
+        {isAdding ? (
+          <span className="flex items-center justify-center gap-2">
+            <svg
+              className="h-4 w-4 animate-spin"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+              />
+            </svg>
+            加入中…
+          </span>
+        ) : isSoldOut ? (
+          '售罄'
+        ) : (
+          '加入购物车'
+        )}
       </button>
     </div>
   )
