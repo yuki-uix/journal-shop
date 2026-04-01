@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { storefrontFetch } from '@/lib/shopify/storefront'
+
+export const dynamic = 'force-dynamic'
 import { GET_PRODUCTS_BY_TAG_QUERY } from '@/lib/shopify/queries/products'
 import type { ProductsResponse, Product } from '@/lib/types/shopify'
 import ProductCard from '@/components/product/ProductCard'
