@@ -1,5 +1,6 @@
 import type { Cart, UserError } from '@/lib/types/shopify'
 import {
+  GET_CART_QUERY,
   CART_CREATE_MUTATION,
   CART_LINES_ADD_MUTATION,
   CART_LINES_UPDATE_MUTATION,
@@ -34,6 +35,17 @@ async function cartFetch<T>(
   const { data, errors } = await res.json()
   if (errors?.length) throw new Error(errors[0].message)
   return data
+}
+
+export async function fetchCart(cartId: string): Promise<Cart | null> {
+  try {
+    const data = await cartFetch<{ cart: Cart | null }>(GET_CART_QUERY, {
+      cartId,
+    })
+    return data.cart
+  } catch {
+    return null
+  }
 }
 
 export async function cartCreate(

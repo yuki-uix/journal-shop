@@ -101,23 +101,34 @@ export function CartDrawer() {
           )}
         </div>
 
-        {/* Footer */}
-        {lines.length > 0 && cart && (
-          <div className="border-t border-zinc-100 px-5 py-5 space-y-4">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-zinc-600">小计</span>
-              <span className="font-semibold text-zinc-900">
-                {formatPrice(cart.cost.subtotalAmount)}
-              </span>
-            </div>
+        {/* Footer — always visible; checkout button disabled when cart is empty */}
+        <div className="border-t border-zinc-100 px-5 py-5 space-y-4">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-zinc-600">小计</span>
+            <span className="font-semibold text-zinc-900">
+              {cart && lines.length > 0
+                ? formatPrice(cart.cost.subtotalAmount)
+                : '—'}
+            </span>
+          </div>
+          {cart && lines.length > 0 ? (
             <a
               href={cart.checkoutUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               className="block w-full rounded-lg bg-zinc-900 py-3 text-center text-base font-semibold text-white transition-colors hover:bg-zinc-800 active:bg-zinc-700"
             >
               前往结账
             </a>
-          </div>
-        )}
+          ) : (
+            <button
+              disabled
+              className="w-full cursor-not-allowed rounded-lg bg-zinc-200 py-3 text-base font-semibold text-zinc-400"
+            >
+              前往结账
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )

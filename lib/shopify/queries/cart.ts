@@ -1,4 +1,4 @@
-const CART_FRAGMENT = `
+export const CART_FRAGMENT = `
   fragment CartFragment on Cart {
     id
     checkoutUrl
@@ -76,6 +76,15 @@ export const CART_LINES_REMOVE_MUTATION = `
     cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
       cart { ...CartFragment }
       userErrors { field message }
+    }
+  }
+`
+
+export const GET_CART_QUERY = `
+  ${CART_FRAGMENT}
+  query GetCart($cartId: ID!) {
+    cart(id: $cartId) {
+      ...CartFragment
     }
   }
 `

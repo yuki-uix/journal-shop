@@ -10,6 +10,7 @@ import {
 } from 'react'
 import type { Cart } from '@/lib/types/shopify'
 import {
+  fetchCart,
   cartCreate,
   cartLinesAdd,
   cartLinesUpdate,
@@ -35,8 +36,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false)
   const cartIdRef = useRef<string | null>(null)
 
+  // On mount: restore cart from localStorage cartId, handle expired/invalid cartId
   useEffect(() => {
-    cartIdRef.current = localStorage.getItem(CART_ID_KEY)
+    const savedId = localStorage.getItem(CART_ID_KEY)
+    if (!savedId) return
+
+    cartIdRef.current = savedId
+    fetchCart(savedId).then((restored) => {
+      if (restored) {
+        setCart(restored)
+      } else {
+        // cartId is expired or invalid — clear it so next addToCart creates a fresh cart
+        localStorage.removeItem(CART_ID_KEY)
+        cartIdRef.current = null
+      }
+    })
   }, [])
 
   const openCart = useCallback(() => setIsOpen(true), [])
