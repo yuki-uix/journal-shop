@@ -4,7 +4,7 @@ import { GET_ALL_PRODUCTS_QUERY } from '@/lib/shopify/queries/products'
 import type { ProductsResponse } from '@/lib/types/shopify'
 import ProductCard from '@/components/product/ProductCard'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: '全部商品 — Journal Shop',
